@@ -1,0 +1,6 @@
+{
+  "input": "sample_data/sky1024px.jpg",
+  "output": "./output",
+  "model_path": "./models/bvlc_googlenet",
+  "model_name": "bvlc_googlenet"
+}

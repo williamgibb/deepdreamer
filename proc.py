@@ -42,11 +42,11 @@ class Proc(object):
         self.model_path = model_path
         self.model_name = model_name
         self.net_fn = os.path.join(self.model_path, net_fn)
-        self.param_fn = os.path.join(self.model_path, '{model}.caffemodel'.format(self.model_name))
+        self.param_fn = os.path.join(self.model_path, '{}.caffemodel'.format(self.model_name))
         # Patching model to be able to compute gradients.
         # Note that you can also manually add "force_backward: true" line to "deploy.prototxt".
         model = caffe.io.caffe_pb2.NetParameter()
-        text_format.Merge(open(net_fn).read(), model)
+        text_format.Merge(open(self.net_fn).read(), model)
         model.force_backward = True
         self.tmp_prototxt = os.path.join(self.model_path, 'tmp.prototxt')
         with open(self.tmp_prototxt, 'w') as f:

@@ -59,4 +59,8 @@ docs/_build/
 # PyBuilder
 target/
 
+test.py
+models/
+output/
+
 

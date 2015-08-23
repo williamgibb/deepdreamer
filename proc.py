@@ -48,10 +48,11 @@ class Proc(object):
         model = caffe.io.caffe_pb2.NetParameter()
         text_format.Merge(open(net_fn).read(), model)
         model.force_backward = True
-        with open('tmp.prototxt', 'w') as f:
+        self.tmp_prototxt = os.path.join(self.model_path, 'tmp.prototxt')
+        with open(self.tmp_prototxt, 'w') as f:
             f.write(str(model))
 
-        self.net = caffe.Classifier('tmp.prototxt',
+        self.net = caffe.Classifier(self.tmp_prototxt,
                                     self.param_fn,
                                     mean=np.float32([104.0, 116.0, 122.0]),  # ImageNet mean, training set dependent
                                     channel_swap=(2, 1, 0))  # the reference model has channels in BGR order instead of RGB

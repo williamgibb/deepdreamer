@@ -39,8 +39,8 @@ def deprocess(net, img):
 
 class Proc(object):
     def __init__(self, model_path, model_name, net_fn='deploy.prototxt'):
-        self.model_path = model_path
-        self.model_name = model_name
+        self.model_path = str(model_path)
+        self.model_name = str(model_name)
         self.net_fn = os.path.join(self.model_path, net_fn)
         self.param_fn = os.path.join(self.model_path, '{}.caffemodel'.format(self.model_name))
         # Patching model to be able to compute gradients.

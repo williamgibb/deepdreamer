@@ -44,7 +44,8 @@ def run_dream(config):
                        model_name=config.get('model_name'))
 
     dreamp.process_image(input_fp=config.get('input'),
-                         output_fp=output_fp)
+                         output_fp=output_fp,
+                         **config.get('deepdream_params'))
     return True
 
 def dump_layers(config):

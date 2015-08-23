@@ -63,7 +63,7 @@ class Proc(object):
                   end='inception_4c/output',
                   jitter=32,
                   clip=True,
-                  objective_args=None
+                  **objective_args
                   ):
         """
         Basic gradient ascent step
@@ -83,7 +83,11 @@ class Proc(object):
         src.data[0] = np.roll(np.roll(src.data[0], ox, -1), oy, -2)  # apply jitter shift
 
         self.net.forward(end=end)
-        objective(dst, **objective_args)  # specify the optimization objective
+        # Do a lookup of the objective function!
+        objective_func = getattr(self, 'objective_{}'.format(objective), None)
+        if not objective_func:
+            raise ValueError('Could not find objective function')
+        objective_func(dst, **objective_args)  # specify the optimization objective
         self.net.backward(start=end)
         g = src.diff[0]
         # apply normalized ascent step to the input image
@@ -102,7 +106,7 @@ class Proc(object):
                   octave_scale=1.4,
                   end='inception_4c/output',
                   clip=True,
-                  **step_params):
+                  **kwargs):
         """
 
         :param base_img:
@@ -111,7 +115,7 @@ class Proc(object):
         :param octave_scale:
         :param end:
         :param clip:
-        :param step_params:
+        :param kwargs:
         :return:
         """
         # prepare base images for all octaves
@@ -131,7 +135,8 @@ class Proc(object):
             src.reshape(1, 3, h, w)  # resize the network's input image size
             src.data[0] = octave_base + detail
             for i in xrange(iter_n):
-                self.make_step(end=end, clip=clip, **step_params)
+                log.warning(kwargs)
+                self.make_step(end=end, clip=clip, **kwargs.get('step_params', {}))
 
                 # visualization
                 vis = deprocess(self.net, src.data[0])

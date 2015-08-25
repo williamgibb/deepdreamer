@@ -39,6 +39,7 @@ def deprocess(net, img):
 
 class Proc(object):
     def __init__(self, model_path, model_name, net_fn='deploy.prototxt'):
+        self.objective_data = {}
         self.model_path = str(model_path)
         self.model_name = str(model_name)
         self.net_fn = os.path.join(self.model_path, net_fn)
@@ -51,11 +52,17 @@ class Proc(object):
         self.tmp_prototxt = os.path.join(self.model_path, 'tmp.prototxt')
         with open(self.tmp_prototxt, 'w') as f:
             f.write(str(model))
-
+        # XXX mean and channel_swap should come from **kwargs
+        # And default to the values for bvlc_googlenet?
         self.net = caffe.Classifier(self.tmp_prototxt,
                                     self.param_fn,
                                     mean=np.float32([104.0, 116.0, 122.0]),  # ImageNet mean, training set dependent
                                     channel_swap=(2, 1, 0))  # the reference model has channels in BGR order instead of RGB
+
+    def reset(self):
+        if self.objective_data:
+            log.info('Resetting guide_data')
+            self.objective_data = {}
 
     def make_step(self,
                   objective,
@@ -63,7 +70,7 @@ class Proc(object):
                   end='inception_4c/output',
                   jitter=32,
                   clip=True,
-                  **objective_args
+                  **kwargs
                   ):
         """
         Basic gradient ascent step
@@ -73,6 +80,7 @@ class Proc(object):
         :param end:
         :param jitter:
         :param clip:
+        :param kwargs:
         :return:
         """
 
@@ -87,7 +95,7 @@ class Proc(object):
         objective_func = getattr(self, 'objective_{}'.format(objective), None)
         if not objective_func:
             raise ValueError('Could not find objective function')
-        objective_func(dst, **objective_args)  # specify the optimization objective
+        objective_func(dst, **kwargs.get('objective_args', {}))  # specify the optimization objective
         self.net.backward(start=end)
         g = src.diff[0]
         # apply normalized ascent step to the input image
@@ -135,7 +143,6 @@ class Proc(object):
             src.reshape(1, 3, h, w)  # resize the network's input image size
             src.data[0] = octave_base + detail
             for i in xrange(iter_n):
-                log.warning(kwargs)
                 self.make_step(end=end, clip=clip, **kwargs.get('step_params', {}))
 
                 # visualization
@@ -151,14 +158,17 @@ class Proc(object):
         # returning the resulting image
         return deprocess(self.net, src.data[0])
 
-    def process_image(self, input_fp, output_fp, **deepdream_params):
+    def process_image(self, input_fp, output_fp, reset=True, **deepdream_params):
         """
 
         :param input_fp:
         :param output_fp:
+        :param reset:
         :param deepdream_params:
         :return:
         """
+        if reset:
+            self.reset()
         frame = np.float32(PIL.Image.open(input_fp))
         frame = self.deepdream(base_img=frame, **deepdream_params)
         PIL.Image.fromarray(np.uint8(frame)).save(output_fp)
@@ -168,10 +178,31 @@ class Proc(object):
     def objective_l2(dst, **kwargs):
         dst.diff[:] = dst.data
 
-    @staticmethod
-    def objective_guide(dst, **kwargs):
+    def objective_guide(self, dst, **kwargs):
         x = dst.data[0].copy()
-        y = kwargs.get('guide_features')
+        y = self.objective_data.get('guide_features', None)
+        if not y:
+            # We make a new net since self.net is already loaded
+            # with data by the time we are inside of the guide function.
+            # In short, the first time we enter into the objective_guide is that
+            # we need to reload the current net locally, (which we can do with the
+            # self. params.
+            net = caffe.Classifier(self.tmp_prototxt,
+                                   self.param_fn,
+                                   # XXX See note in __init__ about seeting mean / channel_swap
+                                   mean=np.float32([104.0, 116.0, 122.0]),  # ImageNet mean, training set dependent
+                                   channel_swap=(2, 1, 0))
+            guide_image = kwargs.get('guide_image')
+            log.info('Building guide from [{}]'.format(guide_image))
+            guide = np.float32(PIL.Image.open(guide_image))
+            end = kwargs.get('guide_end_layer', 'inception_3b/output')
+            h, w = guide.shape[:2]
+            src, dst = net.blobs['data'], net.blobs[end]
+            src.reshape(1,3,h,w)
+            src.data[0] = preprocess(self.net, guide)
+            net.forward(end=end)
+            y = dst.data[0].copy()
+            self.objective_data['guide_features'] = y
         ch = x.shape[0]
         x = x.reshape(ch, -1)
         y = y.reshape(ch, -1)

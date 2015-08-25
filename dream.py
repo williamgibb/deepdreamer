@@ -49,4 +49,9 @@ def run_dream(config):
     return True
 
 def dump_layers(config):
-    pass
+    dreamp = proc.Proc(model_path=config.get('model_path'),
+                       model_name=config.get('model_name'))
+    layers = dreamp.net_layers()
+    layers = [layer for layer in layers if layer not in ['prob', 'data']]
+    s = json.dumps(layers, indent=2, sort_keys=True)
+    print(s)

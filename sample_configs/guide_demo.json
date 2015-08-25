@@ -1,0 +1,16 @@
+{
+  "input": "sample_data/sky1024px.jpg",
+  "output": "./output",
+  "model_path": "./models/bvlc_googlenet",
+  "model_name": "bvlc_googlenet",
+  "deepdream_params": {
+    "end": "inception_3b/output",
+    "step_params": {
+      "objective": "guide",
+      "objective_args": {
+        "guide_image": "./sample_data/flowers.jpg",
+        "guide_end_layer": "inception_3b/output"
+      }
+    }
+  }
+}

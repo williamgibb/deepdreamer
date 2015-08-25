@@ -19,6 +19,8 @@ python -c sample_configs/simple_demo.json
 python -c sample_configs/guide_demo.json
 ```
 
+You'll now have deep dreamed images in the folder 'output'.
+
 todo
 ======
 Lots of things.  Like document the full call interface for proc.Proc.process_image.  It's a work in progress.  Don't be too hard on it right now.

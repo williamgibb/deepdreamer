@@ -44,6 +44,9 @@ def main(options):
         dream.dump_layers(conf)
         sys.exit(0)
 
+    if options.dream_layers:
+        dream.dream_output_layers(conf)
+        sys.exit(0)
     dream.run_dream(conf)
 
 
@@ -58,6 +61,8 @@ def makeargpaser():
                         help='Configuration file')
     parser.add_argument('--dump-layers', dest='dump_layers', default=False, action='store_true',
                         help='Dump the layers for the configured model and exit')
+    parser.add_argument('--dream-layers', dest='dream_layers', default=False, action='store_true',
+                        help='Dream all the output layers?')
     parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
                         help='Enable verbose output')
     return parser

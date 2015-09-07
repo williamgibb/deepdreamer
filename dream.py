@@ -48,6 +48,21 @@ def run_dream(config):
                          **config.get('deepdream_params'))
     return True
 
+
+def dream_output_layers(config):
+    dreamp = proc.Proc(model_path=config.get('model_path'),
+                       model_name=config.get('model_name'))
+
+    layers = [layer for layer in dreamp.net_layers() if layer.endswith('output')]
+    for layer in layers:
+        log.info('Running layer [{}]'.format(layer))
+        config['deepdream_params']['end'] = layer
+        output_fp = make_output_fp(config)
+        dreamp.process_image(input_fp=config.get('input'),
+                             output_fp=output_fp,
+                             **config.get('deepdream_params'))
+
+
 def dump_layers(config):
     dreamp = proc.Proc(model_path=config.get('model_path'),
                        model_name=config.get('model_name'))

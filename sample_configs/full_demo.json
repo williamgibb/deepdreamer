@@ -1,0 +1,22 @@
+{
+  "input": "sample_data/sky1024px.jpg",
+  "output": "./output",
+  "model_path": "./models/bvlc_googlenet",
+  "model_name": "bvlc_googlenet",
+  "deepdream_params": {
+    "iter_n": 10,
+    "octave": 4,
+    "octave_scale": 1.4,
+    "end": "inception_4c/output",
+    "clip": true,
+    "step_params": {
+      "step_size": 1.5,
+      "jitter": 32,
+
+      "objective": "l2"
+    }
+  }
+}
+
+
+

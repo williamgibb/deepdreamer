@@ -12,11 +12,7 @@
     "step_params": {
       "step_size": 1.5,
       "jitter": 32,
-
       "objective": "l2"
     }
   }
 }
-
-
-

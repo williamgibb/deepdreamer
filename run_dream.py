@@ -15,7 +15,6 @@ from __future__ import print_function
 import argparse
 import logging
 import json
-import os
 import sys
 # Custom code
 import dream

@@ -11,12 +11,10 @@ Usage:
 
 """
 from __future__ import print_function
-import argparse
 import datetime
 import logging
 import json
 import os
-import sys
 # Custom code
 import proc
 import utility
@@ -24,6 +22,7 @@ import utility
 log = logging.getLogger(__name__)
 __author__ = 'wgibb'
 __version__ = '0.0.1'
+
 
 def make_output_fp(config):
     input_fn = os.path.basename(config.get('input'))

@@ -86,7 +86,7 @@ class Proc(object):
 
         src = self.net.blobs['data']  # input image is stored in Net's 'data' blob
         dst = self.net.blobs[end]
-
+        # XXX Make jitter optional ? Will need to experiment to see what that does/does not do.
         ox, oy = np.random.randint(-jitter, jitter + 1, 2)
         src.data[0] = np.roll(np.roll(src.data[0], ox, -1), oy, -2)  # apply jitter shift
 
@@ -150,7 +150,7 @@ class Proc(object):
                 if not clip:  # adjust image contrast if clipping is disabled
                     vis *= 255.0 / np.percentile(vis, 99.98)
                 #                showarray(vis)
-                print(octave, i, end, vis.shape)
+                log.info('{}, {}, {}'.format(octave, i, end, vis.shape))
             #                clear_output(wait=True)
 
             # extract details produced on the current octave

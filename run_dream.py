@@ -32,10 +32,10 @@ def main(options):
     log.debug('Reading configuration')
     with open(options.config, 'rb') as f:
         conf = json.loads(f.read().decode('utf-8'))
-    if 'input' not in conf:
+    if options.input:
         log.debug('Setting input to [{}]'.format(options.input))
         conf['input'] = options.input
-    if 'output' not in conf:
+    if options.output:
         log.debug('Setting output to [{}]'.format(options.output))
         conf['output'] = options.output
 

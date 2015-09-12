@@ -47,6 +47,10 @@ def main(options):
         dream.march(conf, 'iter_n', 1, options.march, 1)
         sys.exit(0)
 
+    if options.continual:
+        dream.continual_dream(config=conf, n=options.continual, intensify=options.intensify)
+        sys.exit(0)
+
     if options.dream_layers:
         dream.dream_output_layers(conf)
         sys.exit(0)
@@ -66,6 +70,10 @@ def makeargpaser():
                         help='Dump the layers for the configured model and exit')
     parser.add_argument('--dream-layers', dest='dream_layers', default=False, action='store_true',
                         help='Dream all the output layers?')
+    parser.add_argument('--continual', dest='continual', default=None, action='store', type=int,
+                        help='Dream over the same image multiple times.  Uses the same configuration each time.')
+    parser.add_argument('--intensify', dest='intensify', default=0, action='store', type=int,
+                        help='Intensify a continual dream by incrementing the iterations every 10 times.')
     parser.add_argument('--iter-march', dest='march', default=False, action='store', type=int,
                         help='March several additional iterations')
     parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',

@@ -11,9 +11,9 @@ Usage:
 
 """
 from __future__ import print_function
-import datetime
-import logging
+import hashlib
 import json
+import logging
 import os
 # Custom code
 import proc
@@ -24,19 +24,27 @@ __author__ = 'wgibb'
 __version__ = '0.0.1'
 
 
+DREAMED_FN_SEP = '_DD_'
+
+
 def make_output_fp(config):
-    input_fn = os.path.basename(config.get('input'))
     utility.safe_makedirs(config.get('output'))
-    bn, extension = input_fn.rsplit('.', 1)
-    now = datetime.datetime.utcnow()
-    timestamp = now.strftime('%Y%m%d_%H%M%S')
-    fn_fmt = '{bn}_{ts}.{ext}'
+    input_fn = os.path.basename(config.get('input'))
+    if DREAMED_FN_SEP in input_fn:
+        bn, suffix = input_fn.split(DREAMED_FN_SEP)
+        _, extension = suffix.rsplit('.', 1)
+    else:
+        bn, extension = input_fn.rsplit('.', 1)
+    h = hashlib.md5(json.dumps(config, sort_keys=True)).hexdigest()
+    fn_fmt = '{bn}{const}{h}.{ext}'
     output_fn = fn_fmt.format(bn=bn,
-                              ts=timestamp,
+                              const=DREAMED_FN_SEP,
+                              h=h,
                               ext=extension)
-    config_output_fn = fn_fmt.format(bn=bn,
-                                     ts=timestamp,
-                                     ext='.json')
+    json_fn_fmt = '{bn}_{h}.{ext}'
+    config_output_fn = json_fn_fmt.format(bn=bn,
+                                          h=h,
+                                          ext='json')
     output_fp = os.path.join(config.get('output'), output_fn)
     config_output_fp = os.path.join(config.get('output'), config_output_fn)
     return output_fp, config_output_fp
@@ -55,7 +63,7 @@ def run_dream(config, dreamp=None):
     with open(config_output_fp, 'wb') as f:
         f.write(json.dumps(config))
 
-    return True
+    return output_fp
 
 
 def dream_output_layers(config):
@@ -75,6 +83,23 @@ def march(config, param, start, end, increment):
     for i in range(start, end, increment):
         config['deepdream_params'][param] = i
         run_dream(config, dreamp=dreamp)
+
+
+def continual_dream(config, n, zoom=False, intensify=0):
+    # XXX Add the zoom code from google here?
+    dreamp = proc.Proc(model_path=config.get('model_path'),
+                       model_name=config.get('model_name'))
+    log.info('Dreaming the same image {} times'.format(n))
+    for i in range(n):
+        if i and i % 10 == 0:
+            if intensify:
+                iterations = config['deepdream_params']['iter_n']
+                ni = iterations + intensify
+                log.info('Setting the iterations value to {}'.format(ni))
+                config['deepdream_params']['iter_n'] = ni
+        log.info('Dream iteration {}'.format(i+1))
+        output_fp = run_dream(config, dreamp=dreamp)
+        config['input'] = output_fp
 
 
 def dump_layers(config):
